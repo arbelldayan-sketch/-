@@ -114,6 +114,7 @@
       const [selectedDayForTask, setSelectedDayForTask] = useState('');
       const [selectedTimeForTask, setSelectedTimeForTask] = useState('');
       const [selectedCategory, setSelectedCategory] = useState('workout');
+      const [showHabitModal, setShowHabitModal] = useState(false);
 
       const calculateCompletion = () => {
         const currentDay = getCurrentDay();
@@ -181,6 +182,22 @@
         }
       };
 
+      const deleteHabit = (habitId) => {
+        if (confirm('למחוק את ההרגל הזה?')) {
+          setHabits(prev => prev.filter(h => h.id !== habitId));
+        }
+      };
+
+      const addHabit = (title) => {
+        const newHabit = {
+          id: Date.now(),
+          title: title.trim(),
+          icon: '',
+          completed: false
+        };
+        setHabits(prev => [...prev, newHabit]);
+      };
+
       const canPlayFIFA = completedToday >= 80;
 
       return (
@@ -200,6 +217,9 @@
             {currentPage === 'dashboard' && (
               <>
                 <h2 style={{marginBottom: '20px', color: '#ffffff', fontSize: '24px', fontWeight: 'bold', textAlign: 'center'}}>הרגלים יומיים</h2>
+                
+                <button onClick={() => setShowHabitModal(true)} style={{width: '100%', padding: '16px', border: 'none', borderRadius: '20px', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: 'white', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '15px', boxShadow: '0 6px 16px rgba(102, 126, 234, 0.3)'}}>+ הוסף הרגל</button>
+                
                 {habits.map(habit => (
                   <div key={habit.id} style={{
                     background: 'linear-gradient(145deg, #f0f0f5, #e0e0e8)',
@@ -233,28 +253,50 @@
                           <div style={{fontSize: '12px', color: '#718096'}}>היומיים</div>
                         </div>
                       </div>
-                      <button 
-                        onClick={() => toggleHabit(habit.id)} 
-                        style={{
-                          width: '100px',
-                          padding: '12px 20px',
-                          border: 'none',
-                          borderRadius: '25px',
-                          fontSize: '15px',
-                          fontWeight: 'bold',
-                          cursor: 'pointer',
-                          background: habit.completed ? 'linear-gradient(135deg, #48bb78, #38a169)' : '#a0aec0',
-                          color: 'white',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px',
-                          boxShadow: habit.completed ? '0 4px 12px rgba(72, 187, 120, 0.4)' : '0 2px 8px rgba(0,0,0,0.1)',
-                          transition: 'all 0.3s ease'
-                        }}
-                      >
-                        {habit.completed && '✓'} בוצע
-                      </button>
+                      <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                        <button 
+                          onClick={() => toggleHabit(habit.id)} 
+                          style={{
+                            width: '100px',
+                            padding: '12px 20px',
+                            border: 'none',
+                            borderRadius: '25px',
+                            fontSize: '15px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            background: habit.completed ? 'linear-gradient(135deg, #48bb78, #38a169)' : '#a0aec0',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            boxShadow: habit.completed ? '0 4px 12px rgba(72, 187, 120, 0.4)' : '0 2px 8px rgba(0,0,0,0.1)',
+                            transition: 'all 0.3s ease'
+                          }}
+                        >
+                          {habit.completed && '✓'} בוצע
+                        </button>
+                        <button 
+                          onClick={() => deleteHabit(habit.id)} 
+                          style={{
+                            padding: '12px',
+                            border: 'none',
+                            borderRadius: '50%',
+                            background: 'rgba(252, 129, 129, 0.9)',
+                            color: 'white',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            width: '45px',
+                            height: '45px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 2px 8px rgba(252, 129, 129, 0.3)'
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -556,7 +598,6 @@
               <div>
                 <h2 style={{marginBottom: '20px', color: '#ffffff', fontSize: '24px', fontWeight: 'bold', textAlign: 'center'}}>מעקב זמן</h2>
                 
-                {/* Today's Stats */}
                 <div style={{marginBottom: '30px'}}>
                   <h3 style={{color: '#ffffff', fontSize: '18px', marginBottom: '15px', textAlign: 'center'}}>היום - {getCurrentDay()}</h3>
                   {(() => {
@@ -603,7 +644,6 @@
 
                     return (
                       <>
-                        {/* Pie Chart */}
                         <div style={{
                           background: '#1a1a1a',
                           borderRadius: '15px',
@@ -641,10 +681,10 @@
                                     />
                                     {percentage > 5 && (
                                       <text
-                                        x={125 + 50 * Math.cos((startAngle + angle / 2) * Math.PI / 180)}
-                                        y={125 + 50 * Math.sin((startAngle + angle / 2) * Math.PI / 180)}
+                                        x={125 + 45 * Math.cos((startAngle + angle / 2) * Math.PI / 180)}
+                                        y={125 + 45 * Math.sin((startAngle + angle / 2) * Math.PI / 180)}
                                         fill="white"
-                                        fontSize="14"
+                                        fontSize="11"
                                         fontWeight="bold"
                                         textAnchor="middle"
                                         dominantBaseline="middle"
@@ -666,7 +706,6 @@
                           </svg>
                         </div>
 
-                        {/* Category List */}
                         {categories.map((cat, i) => {
                           const percentage = ((cat.hours / totalTime) * 100).toFixed(1);
                           return (
@@ -703,7 +742,6 @@
                   })()}
                 </div>
 
-                {/* Week Stats */}
                 <div>
                   <h3 style={{color: '#ffffff', fontSize: '18px', marginBottom: '15px', textAlign: 'center'}}>השבוע</h3>
                   {(() => {
@@ -752,7 +790,6 @@
 
                     return (
                       <>
-                        {/* Pie Chart */}
                         <div style={{
                           background: '#1a1a1a',
                           borderRadius: '15px',
@@ -790,10 +827,10 @@
                                     />
                                     {percentage > 5 && (
                                       <text
-                                        x={125 + 50 * Math.cos((startAngle + angle / 2) * Math.PI / 180)}
-                                        y={125 + 50 * Math.sin((startAngle + angle / 2) * Math.PI / 180)}
+                                        x={125 + 45 * Math.cos((startAngle + angle / 2) * Math.PI / 180)}
+                                        y={125 + 45 * Math.sin((startAngle + angle / 2) * Math.PI / 180)}
                                         fill="white"
-                                        fontSize="14"
+                                        fontSize="11"
                                         fontWeight="bold"
                                         textAnchor="middle"
                                         dominantBaseline="middle"
@@ -815,7 +852,6 @@
                           </svg>
                         </div>
 
-                        {/* Category List */}
                         {categories.map((cat, i) => {
                           const percentage = ((cat.hours / totalTime) * 100).toFixed(1);
                           return (
@@ -1020,6 +1056,107 @@
                       שמירה
                     </button>
                   </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {showHabitModal && (
+            <div 
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0,0,0,0.6)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 2000,
+                padding: '20px'
+              }}
+              onClick={() => setShowHabitModal(false)}
+            >
+              <div 
+                style={{
+                  background: '#1a1a1a',
+                  borderRadius: '20px',
+                  padding: '25px',
+                  maxWidth: '450px',
+                  width: '100%',
+                  boxShadow: '0 10px 40px rgba(107,63,160,0.5)',
+                  border: '1px solid #6b3fa0'
+                }}
+                onClick={e => e.stopPropagation()}
+              >
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px'}}>
+                  <h2 style={{margin: 0, color: '#ffffff', fontSize: '20px'}}>הוסף הרגל חדש</h2>
+                  <button 
+                    onClick={() => setShowHabitModal(false)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '32px',
+                      cursor: 'pointer',
+                      color: '#6c757d',
+                      lineHeight: 1,
+                      padding: 0
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.target);
+                  const title = formData.get('habitTitle');
+                  
+                  if (title && title.trim()) {
+                    addHabit(title);
+                    setShowHabitModal(false);
+                    e.target.reset();
+                  }
+                }}>
+                  <div style={{marginBottom: '30px'}}>
+                    <input 
+                      type="text"
+                      name="habitTitle"
+                      required
+                      autoFocus
+                      placeholder="שם ההרגל..."
+                      style={{
+                        width: '100%',
+                        padding: '15px',
+                        border: 'none',
+                        borderBottom: '2px solid #6b3fa0',
+                        fontSize: '16px',
+                        boxSizing: 'border-box',
+                        outline: 'none',
+                        fontWeight: '500',
+                        background: '#0a0a0a',
+                        color: '#ffffff'
+                      }}
+                    />
+                  </div>
+
+                  <button 
+                    type="submit"
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      border: 'none',
+                      borderRadius: '10px',
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      background: 'linear-gradient(135deg, #6b3fa0, #8b5fbf)',
+                      color: 'white'
+                    }}
+                  >
+                    הוסף הרגל
+                  </button>
                 </form>
               </div>
             </div>
