@@ -654,7 +654,12 @@
                           justifyContent: 'center',
                           alignItems: 'center'
                         }}>
-                          <svg width="250" height="250" viewBox="0 0 250 250">
+                          <svg width="350" height="350" viewBox="0 0 350 350">
+                            <defs>
+                              <filter id="shadow">
+                                <feDropShadow dx="0" dy="4" stdDeviation="3" floodOpacity="0.3"/>
+                              </filter>
+                            </defs>
                             {(() => {
                               let currentAngle = -90;
                               return categories.map((cat, i) => {
@@ -666,41 +671,85 @@
                                 
                                 const startRad = (startAngle * Math.PI) / 180;
                                 const endRad = (endAngle * Math.PI) / 180;
-                                const x1 = 125 + 80 * Math.cos(startRad);
-                                const y1 = 125 + 80 * Math.sin(startRad);
-                                const x2 = 125 + 80 * Math.cos(endRad);
-                                const y2 = 125 + 80 * Math.sin(endRad);
+                                const midAngle = (startAngle + endAngle) / 2;
+                                const midRad = (midAngle * Math.PI) / 180;
+                                
+                                const x1 = 175 + 90 * Math.cos(startRad);
+                                const y1 = 175 + 90 * Math.sin(startRad);
+                                const x2 = 175 + 90 * Math.cos(endRad);
+                                const y2 = 175 + 90 * Math.sin(endRad);
+                                
+                                const labelX = 175 + 140 * Math.cos(midRad);
+                                const labelY = 175 + 140 * Math.sin(midRad);
+                                
+                                const lineX1 = 175 + 95 * Math.cos(midRad);
+                                const lineY1 = 175 + 95 * Math.sin(midRad);
+                                const lineX2 = 175 + 120 * Math.cos(midRad);
+                                const lineY2 = 175 + 120 * Math.sin(midRad);
+                                
                                 const largeArc = angle > 180 ? 1 : 0;
                                 
                                 return (
                                   <g key={i}>
                                     <path
-                                      d={`M 125 125 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                                      d={`M 175 175 L ${x1} ${y1} A 90 90 0 ${largeArc} 1 ${x2} ${y2} Z`}
                                       fill={cat.color}
-                                      opacity="0.9"
+                                      opacity="0.85"
+                                      filter="url(#shadow)"
                                     />
-                                    {percentage > 5 && (
-                                      <text
-                                        x={125 + 45 * Math.cos((startAngle + angle / 2) * Math.PI / 180)}
-                                        y={125 + 45 * Math.sin((startAngle + angle / 2) * Math.PI / 180)}
-                                        fill="white"
-                                        fontSize="11"
-                                        fontWeight="bold"
-                                        textAnchor="middle"
-                                        dominantBaseline="middle"
-                                      >
-                                        {Math.round(percentage)}%
-                                      </text>
+                                    <path
+                                      d={`M 175 175 L ${x1} ${y1} A 90 90 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                                      fill="url(#grad${i})"
+                                      opacity="0.3"
+                                    />
+                                    <defs>
+                                      <radialGradient id={`grad${i}`}>
+                                        <stop offset="0%" stopColor="white" stopOpacity="0.4"/>
+                                        <stop offset="100%" stopColor="black" stopOpacity="0.2"/>
+                                      </radialGradient>
+                                    </defs>
+                                    
+                                    {percentage > 3 && (
+                                      <>
+                                        <line
+                                          x1={lineX1}
+                                          y1={lineY1}
+                                          x2={lineX2}
+                                          y2={lineY2}
+                                          stroke="white"
+                                          strokeWidth="2"
+                                          opacity="0.6"
+                                        />
+                                        <circle
+                                          cx={lineX2}
+                                          cy={lineY2}
+                                          r="3"
+                                          fill="white"
+                                          opacity="0.8"
+                                        />
+                                        <text
+                                          x={labelX}
+                                          y={labelY}
+                                          fill="white"
+                                          fontSize="18"
+                                          fontWeight="bold"
+                                          textAnchor="middle"
+                                          dominantBaseline="middle"
+                                        >
+                                          {Math.round(percentage)}%
+                                        </text>
+                                      </>
                                     )}
                                   </g>
                                 );
                               });
                             })()}
-                            <circle cx="125" cy="125" r="50" fill="#1a1a1a" />
-                            <text x="125" y="120" fill="white" fontSize="20" fontWeight="bold" textAnchor="middle">
+                            <circle cx="175" cy="175" r="65" fill="#2a2a3a" filter="url(#shadow)" />
+                            <circle cx="175" cy="175" r="60" fill="#1a1a2a" />
+                            <text x="175" y="165" fill="white" fontSize="32" fontWeight="bold" textAnchor="middle">
                               {totalTime}
                             </text>
-                            <text x="125" y="140" fill="#9ca3af" fontSize="12" textAnchor="middle">
+                            <text x="175" y="190" fill="#9ca3af" fontSize="14" textAnchor="middle">
                               שעות
                             </text>
                           </svg>
@@ -800,7 +849,12 @@
                           justifyContent: 'center',
                           alignItems: 'center'
                         }}>
-                          <svg width="250" height="250" viewBox="0 0 250 250">
+                          <svg width="350" height="350" viewBox="0 0 350 350">
+                            <defs>
+                              <filter id="shadow2">
+                                <feDropShadow dx="0" dy="4" stdDeviation="3" floodOpacity="0.3"/>
+                              </filter>
+                            </defs>
                             {(() => {
                               let currentAngle = -90;
                               return categories.map((cat, i) => {
@@ -812,41 +866,85 @@
                                 
                                 const startRad = (startAngle * Math.PI) / 180;
                                 const endRad = (endAngle * Math.PI) / 180;
-                                const x1 = 125 + 80 * Math.cos(startRad);
-                                const y1 = 125 + 80 * Math.sin(startRad);
-                                const x2 = 125 + 80 * Math.cos(endRad);
-                                const y2 = 125 + 80 * Math.sin(endRad);
+                                const midAngle = (startAngle + endAngle) / 2;
+                                const midRad = (midAngle * Math.PI) / 180;
+                                
+                                const x1 = 175 + 90 * Math.cos(startRad);
+                                const y1 = 175 + 90 * Math.sin(startRad);
+                                const x2 = 175 + 90 * Math.cos(endRad);
+                                const y2 = 175 + 90 * Math.sin(endRad);
+                                
+                                const labelX = 175 + 140 * Math.cos(midRad);
+                                const labelY = 175 + 140 * Math.sin(midRad);
+                                
+                                const lineX1 = 175 + 95 * Math.cos(midRad);
+                                const lineY1 = 175 + 95 * Math.sin(midRad);
+                                const lineX2 = 175 + 120 * Math.cos(midRad);
+                                const lineY2 = 175 + 120 * Math.sin(midRad);
+                                
                                 const largeArc = angle > 180 ? 1 : 0;
                                 
                                 return (
                                   <g key={i}>
                                     <path
-                                      d={`M 125 125 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                                      d={`M 175 175 L ${x1} ${y1} A 90 90 0 ${largeArc} 1 ${x2} ${y2} Z`}
                                       fill={cat.color}
-                                      opacity="0.9"
+                                      opacity="0.85"
+                                      filter="url(#shadow2)"
                                     />
-                                    {percentage > 5 && (
-                                      <text
-                                        x={125 + 45 * Math.cos((startAngle + angle / 2) * Math.PI / 180)}
-                                        y={125 + 45 * Math.sin((startAngle + angle / 2) * Math.PI / 180)}
-                                        fill="white"
-                                        fontSize="11"
-                                        fontWeight="bold"
-                                        textAnchor="middle"
-                                        dominantBaseline="middle"
-                                      >
-                                        {Math.round(percentage)}%
-                                      </text>
+                                    <path
+                                      d={`M 175 175 L ${x1} ${y1} A 90 90 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                                      fill="url(#grad2${i})"
+                                      opacity="0.3"
+                                    />
+                                    <defs>
+                                      <radialGradient id={`grad2${i}`}>
+                                        <stop offset="0%" stopColor="white" stopOpacity="0.4"/>
+                                        <stop offset="100%" stopColor="black" stopOpacity="0.2"/>
+                                      </radialGradient>
+                                    </defs>
+                                    
+                                    {percentage > 3 && (
+                                      <>
+                                        <line
+                                          x1={lineX1}
+                                          y1={lineY1}
+                                          x2={lineX2}
+                                          y2={lineY2}
+                                          stroke="white"
+                                          strokeWidth="2"
+                                          opacity="0.6"
+                                        />
+                                        <circle
+                                          cx={lineX2}
+                                          cy={lineY2}
+                                          r="3"
+                                          fill="white"
+                                          opacity="0.8"
+                                        />
+                                        <text
+                                          x={labelX}
+                                          y={labelY}
+                                          fill="white"
+                                          fontSize="18"
+                                          fontWeight="bold"
+                                          textAnchor="middle"
+                                          dominantBaseline="middle"
+                                        >
+                                          {Math.round(percentage)}%
+                                        </text>
+                                      </>
                                     )}
                                   </g>
                                 );
                               });
                             })()}
-                            <circle cx="125" cy="125" r="50" fill="#1a1a1a" />
-                            <text x="125" y="120" fill="white" fontSize="20" fontWeight="bold" textAnchor="middle">
+                            <circle cx="175" cy="175" r="65" fill="#2a2a3a" filter="url(#shadow2)" />
+                            <circle cx="175" cy="175" r="60" fill="#1a1a2a" />
+                            <text x="175" y="165" fill="white" fontSize="32" fontWeight="bold" textAnchor="middle">
                               {totalTime}
                             </text>
-                            <text x="125" y="140" fill="#9ca3af" fontSize="12" textAnchor="middle">
+                            <text x="175" y="190" fill="#9ca3af" fontSize="14" textAnchor="middle">
                               שעות
                             </text>
                           </svg>
