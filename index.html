@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title> <title> Momentum - בנה את עצמך</title>
-<meta name="theme-color" content="#6b3fa0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="/manifest.json">
-<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>Momentum - בנה את עצמך</title>
+  <title>Momentum - בנה את עצמך</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#6b3fa0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/manifest.json">
+  
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1283,7 +1285,10 @@
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
-  </script> <script>
+  </script>
+  
+  <!-- PWA Service Worker -->
+  <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js')
         .then(() => console.log('✅ PWA מוכן!'))
@@ -1291,5 +1296,4 @@
     }
   </script>
 </body>
-</body> 
 </html>
