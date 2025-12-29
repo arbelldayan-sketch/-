@@ -15,7 +15,7 @@
     }
     body {
       font-family: system-ui, -apple-system, sans-serif;
-      background: #f8f7fc;
+      background: linear-gradient(180deg, #2d2d3f 0%, #1a1a2e 100%);
     }
     #root {
       width: 100%;
@@ -42,9 +42,9 @@
     };
 
     const initialHabits = [
-      { id: 'reading', title: 'קריאת 10 עמודים', icon: '📖', current: 0, target: 10, unit: 'עמודים' },
-      { id: 'water', title: 'שתיית 3 ליטר מים', icon: '💧', current: 0, target: 3, unit: 'ליטר' },
-      { id: 'meals', title: '3 ארוחות מסודרות', icon: '🍽️', current: 0, target: 3, unit: 'ארוחות' }
+      { id: 'reading', title: 'קריאה', icon: '', completed: false },
+      { id: 'water', title: 'שתיית מים', icon: '', completed: false },
+      { id: 'meals', title: 'ארוחות מסודרות', icon: '', completed: false }
     ];
 
     const daysOfWeek = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
@@ -56,16 +56,33 @@
     };
 
     const MomentumLogo = () => (
-      <div style={{textAlign: 'center', padding: '8px 0'}}>
-        <div style={{maxWidth: '200px', margin: '0 auto', background: 'white', padding: '10px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)'}}>
-          <svg width="100%" viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
-            <g transform="translate(200, 40)">
-              <polygon points="0,100 50,20 100,70 150,10 200,50 250,80 200,100 150,100 100,100 50,100" fill="#6b3fa0" opacity="0.9"/>
-              <polygon points="50,20 100,70 100,100 50,100" fill="#6b3fa0" opacity="0.7"/>
-              <polygon points="150,10 200,50 200,100 150,100" fill="#6b3fa0" opacity="0.5"/>
+      <div style={{textAlign: 'center', padding: '15px 0'}}>
+        <div style={{maxWidth: '360px', margin: '0 auto'}}>
+          <svg width="100%" viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(150, 20)">
+              <path d="M 0,60 L 30,10 L 50,35 L 70,5 L 90,30 L 120,50 L 150,15 L 180,40 L 200,60 L 0,60 Z" 
+                    fill="#6b3fa0" 
+                    opacity="0.9"/>
             </g>
-            <text x="400" y="200" fontFamily="Impact, Arial Black, sans-serif" fontSize="90" fontWeight="900" fontStyle="italic" fill="#6b3fa0" textAnchor="middle" letterSpacing="-2">momentum</text>
-            <text x="400" y="260" fontFamily="Impact, Arial, sans-serif" fontSize="32" fontWeight="900" letterSpacing="12" fill="#1a2332" textAnchor="middle">BUILD YOURSELF</text>
+            <text x="300" y="130" 
+                  fontFamily="Impact, Arial Black, sans-serif" 
+                  fontSize="65" 
+                  fontWeight="900" 
+                  fontStyle="italic" 
+                  fill="#8b5fbf" 
+                  textAnchor="middle" 
+                  letterSpacing="-1">
+              momentum
+            </text>
+            <text x="300" y="170" 
+                  fontFamily="Arial, sans-serif" 
+                  fontSize="20" 
+                  fontWeight="900" 
+                  letterSpacing="8" 
+                  fill="#9ca3af" 
+                  textAnchor="middle">
+              BUILD YOURSELF
+            </text>
           </svg>
         </div>
       </div>
@@ -75,7 +92,7 @@
       const [habits, setHabits] = useState(() => Storage.get('habits') || initialHabits);
       const [streak, setStreak] = useState(() => Storage.get('streak') || 0);
       const [level, setLevel] = useState(() => Storage.get('level') || 1);
-      const [points, setPoints] = useState(() => Storage.get('points') || 0);
+      const [points, setPoints] = useState(() => Storage.get('points') || 20);
       const [completedToday, setCompletedToday] = useState(0);
       const [currentPage, setCurrentPage] = useState('dashboard');
       const [schedule, setSchedule] = useState(() => Storage.get('schedule') || initialSchedule);
@@ -86,8 +103,8 @@
       const calculateCompletion = () => {
         const currentDay = getCurrentDay();
         const todayTasks = schedule[currentDay] || [];
-        const habitTotal = habits.reduce((sum, h) => sum + h.target, 0);
-        const habitCompleted = habits.reduce((sum, h) => sum + h.current, 0);
+        const habitTotal = habits.length;
+        const habitCompleted = habits.filter(h => h.completed).length;
         const tasksTotal = todayTasks.length;
         const tasksCompleted = todayTasks.filter(t => t.completed).length;
         const totalTasks = habitTotal + tasksTotal;
@@ -104,12 +121,12 @@
         setCompletedToday(calculateCompletion());
       }, [habits, streak, level, points, schedule]);
 
-      const updateHabit = (habitId, increment = true) => {
+      const toggleHabit = (habitId) => {
         setHabits(prev => prev.map(h => {
           if (h.id === habitId) {
-            const newCurrent = increment ? Math.min(h.current + 1, h.target) : Math.max(h.current - 1, 0);
-            if (newCurrent === h.target && h.current !== h.target) setPoints(p => p + 10);
-            return { ...h, current: newCurrent };
+            const newCompleted = !h.completed;
+            if (newCompleted) setPoints(p => p + 10);
+            return { ...h, completed: newCompleted };
           }
           return h;
         }));
@@ -151,136 +168,244 @@
       const canPlayFIFA = completedToday >= 80;
 
       return (
-        <div style={{fontFamily: 'system-ui, -apple-system, sans-serif', direction: 'rtl', height: '100vh', display: 'flex', flexDirection: 'column', background: '#f8f7fc'}}>
+        <div style={{fontFamily: 'system-ui, -apple-system, sans-serif', direction: 'rtl', height: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #2d2d3f 0%, #1a1a2e 100%)', color: '#ffffff'}}>
           
-          <div style={{background: 'white', color: '#6b3fa0', padding: '8px 10px', textAlign: 'center', boxShadow: '0 2px 8px rgba(107,63,160,0.1)', borderBottom: '2px solid #6b3fa0'}}>
+          <div style={{background: '#1a1a1a', color: '#6b3fa0', padding: '6px 8px', textAlign: 'center', boxShadow: '0 2px 6px rgba(107,63,160,0.3)', borderBottom: '2px solid #6b3fa0'}}>
             <MomentumLogo />
-            <div style={{fontSize: '12px', fontWeight: '600', marginTop: '6px', color: '#6b3fa0'}}>רמה {level} • {points} נקודות</div>
             {streak > 0 && (
               <div style={{display: 'inline-block', background: 'linear-gradient(135deg, #6b3fa0, #8b5fbf)', color: 'white', padding: '4px 10px', borderRadius: '12px', fontWeight: 'bold', marginTop: '6px', fontSize: '11px'}}>
-                🔥 {streak} ימים
+                {streak} ימים
               </div>
             )}
-          </div>
-
-          <div style={{display: 'flex', justifyContent: 'space-around', padding: '10px', background: 'white', borderBottom: '1px solid #e9e5f5'}}>
-            <div style={{textAlign: 'center'}}>
-              <div style={{fontSize: '18px', fontWeight: 'bold', color: '#6b3fa0'}}>{completedToday}%</div>
-              <div style={{fontSize: '10px', color: '#8b5fbf', fontWeight: '600'}}>השלמה</div>
-            </div>
-            <div style={{textAlign: 'center'}}>
-              <div style={{fontSize: '18px', fontWeight: 'bold', color: '#6b3fa0'}}>{habits.filter(h => h.current >= h.target).length}</div>
-              <div style={{fontSize: '10px', color: '#8b5fbf', fontWeight: '600'}}>הושלמו</div>
-            </div>
-            <div style={{textAlign: 'center'}}>
-              <div style={{fontSize: '18px', fontWeight: 'bold', color: '#6b3fa0'}}>{habits.length - habits.filter(h => h.current >= h.target).length}</div>
-              <div style={{fontSize: '10px', color: '#8b5fbf', fontWeight: '600'}}>נותרו</div>
-            </div>
           </div>
 
           <div style={{flex: 1, overflowY: 'auto', padding: '20px', paddingBottom: '100px'}}>
             
             {currentPage === 'dashboard' && (
               <>
-                {!canPlayFIFA && (
-                  <div style={{background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white', padding: '25px', borderRadius: '15px', textAlign: 'center', marginBottom: '20px'}}>
-                    <h2 style={{fontSize: '22px', margin: '0 0 10px 0'}}>🎮 מותרות חסומות</h2>
-                    <div style={{fontSize: '48px', fontWeight: 'bold', margin: '15px 0'}}>{completedToday}%</div>
-                    <p style={{margin: 0, fontSize: '15px'}}>עוד {80 - completedToday}% ותוכל לשחק!</p>
-                  </div>
-                )}
-
-                {canPlayFIFA && (
-                  <div style={{padding: '15px', borderRadius: '10px', marginBottom: '15px', background: '#d4edda', borderRight: '4px solid #28a745', color: '#155724'}}>
-                    🎉 כל הכבוד! השלמת {completedToday}% - המותרות זמינות!
-                  </div>
-                )}
-
-                <h2 style={{marginBottom: '15px', color: '#2d3748'}}>📌 הרגלים קבועים</h2>
+                <h2 style={{marginBottom: '20px', color: '#ffffff', fontSize: '24px', fontWeight: 'bold', textAlign: 'center'}}>הרגלים יומיים</h2>
                 {habits.map(habit => (
                   <div key={habit.id} style={{
-                    background: habit.current >= habit.target ? 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)' : 'white',
-                    borderRadius: '15px',
+                    background: 'linear-gradient(145deg, #f0f0f5, #e0e0e8)',
+                    borderRadius: '20px',
                     padding: '20px',
                     marginBottom: '15px',
-                    boxShadow: '0 2px 10px rgba(107,63,160,0.1)'
+                    boxShadow: habit.completed ? '0 8px 20px rgba(72, 187, 120, 0.3), inset 0 1px 0 rgba(255,255,255,0.5)' : '0 8px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.5)',
+                    border: 'none',
+                    position: 'relative',
+                    overflow: 'hidden'
                   }}>
-                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
-                      <div style={{fontSize: '18px', fontWeight: 'bold', color: '#2d3748'}}>{habit.title}</div>
-                      <div style={{fontSize: '28px'}}>{habit.icon}</div>
-                    </div>
-                    <div style={{marginBottom: '12px'}}>
-                      <div style={{height: '8px', background: '#e9ecef', borderRadius: '10px', overflow: 'hidden'}}>
+                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                      <div style={{display: 'flex', alignItems: 'center', gap: '15px', flex: 1}}>
                         <div style={{
-                          height: '100%',
-                          background: 'linear-gradient(90deg, #6b3fa0, #8b5fbf)',
-                          width: `${(habit.current / habit.target) * 100}%`,
-                          transition: 'width 0.5s ease',
-                          borderRadius: '10px'
-                        }} />
+                          width: '50px',
+                          height: '50px',
+                          borderRadius: '15px',
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '24px',
+                          boxShadow: '0 4px 10px rgba(102, 126, 234, 0.3)'
+                        }}>
+                          {habit.id === 'reading' && '📖'}
+                          {habit.id === 'water' && '💧'}
+                          {habit.id === 'meals' && '🍽️'}
+                        </div>
+                        <div>
+                          <div style={{fontSize: '18px', fontWeight: 'bold', color: '#2d3748', marginBottom: '2px'}}>{habit.title}</div>
+                          <div style={{fontSize: '12px', color: '#718096'}}>היומיים</div>
+                        </div>
                       </div>
-                      <div style={{fontSize: '14px', color: '#6c757d', marginTop: '5px'}}>
-                        {habit.current} מתוך {habit.target} {habit.unit}
-                      </div>
-                    </div>
-                    <div style={{display: 'flex', gap: '10px'}}>
-                      {habit.current > 0 && (
-                        <button onClick={() => updateHabit(habit.id, false)} style={{flex: 1, padding: '12px', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', background: '#6c757d', color: 'white'}}>-</button>
-                      )}
-                      {habit.current < habit.target ? (
-                        <button onClick={() => updateHabit(habit.id, true)} style={{flex: 1, padding: '12px', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', background: 'linear-gradient(135deg, #6b3fa0, #8b5fbf)', color: 'white'}}>+ עוד אחד</button>
-                      ) : (
-                        <button style={{flex: 1, padding: '12px', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 'bold', background: 'linear-gradient(135deg, #84fab0, #8fd3f4)', color: '#2d3748'}}>✓ הושלם!</button>
-                      )}
+                      <button 
+                        onClick={() => toggleHabit(habit.id)} 
+                        style={{
+                          width: '100px',
+                          padding: '12px 20px',
+                          border: 'none',
+                          borderRadius: '25px',
+                          fontSize: '15px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          background: habit.completed ? 'linear-gradient(135deg, #48bb78, #38a169)' : '#a0aec0',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          boxShadow: habit.completed ? '0 4px 12px rgba(72, 187, 120, 0.4)' : '0 2px 8px rgba(0,0,0,0.1)',
+                          transition: 'all 0.3s ease'
+                        }}
+                      >
+                        {habit.completed && '✓'} בוצע
+                      </button>
                     </div>
                   </div>
                 ))}
 
-                <h2 style={{marginTop: '30px', marginBottom: '15px', color: '#2d3748'}}>🎯 מטרות יומיות - {getCurrentDay()}</h2>
-                <button onClick={() => addTask(getCurrentDay())} style={{width: '100%', padding: '12px', border: 'none', borderRadius: '10px', background: 'linear-gradient(135deg, #6b3fa0, #8b5fbf)', color: 'white', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '15px'}}>+ הוסף מטרה</button>
+                <button onClick={() => addTask(getCurrentDay())} style={{width: '100%', padding: '16px', border: 'none', borderRadius: '20px', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: 'white', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '15px', marginTop: '10px', boxShadow: '0 6px 16px rgba(102, 126, 234, 0.3)'}}>+ הוסף מטרה</button>
                 
                 {(schedule[getCurrentDay()] || []).map(task => (
                   <div key={task.id} style={{
-                    background: task.completed ? 'linear-gradient(135deg, #d4edda, #c3e6cb)' : 'white',
-                    borderRadius: '15px',
-                    padding: '20px',
-                    marginBottom: '15px',
-                    boxShadow: '0 2px 10px rgba(107,63,160,0.1)',
-                    border: task.completed ? '2px solid #28a745' : '2px solid #e9ecef',
+                    background: 'linear-gradient(145deg, #f0f0f5, #e0e0e8)',
+                    borderRadius: '20px',
+                    padding: '18px',
+                    marginBottom: '12px',
+                    boxShadow: '0 6px 16px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5)',
+                    border: 'none',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '15px'
+                    gap: '12px'
                   }}>
                     <button onClick={() => toggleTask(getCurrentDay(), task.id)} style={{
-                      width: '32px',
-                      height: '32px',
+                      width: '40px',
+                      height: '40px',
                       borderRadius: '50%',
-                      border: '3px solid',
-                      borderColor: task.completed ? '#28a745' : '#6b3fa0',
-                      background: task.completed ? '#28a745' : 'white',
+                      border: 'none',
+                      background: task.completed ? 'linear-gradient(135deg, #48bb78, #38a169)' : '#cbd5e0',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '18px',
-                      color: 'white'
+                      fontSize: '20px',
+                      color: 'white',
+                      boxShadow: task.completed ? '0 4px 12px rgba(72, 187, 120, 0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                      flexShrink: 0
                     }}>
                       {task.completed && '✓'}
                     </button>
                     <div style={{flex: 1}}>
-                      <div style={{fontSize: '18px', fontWeight: 'bold', textDecoration: task.completed ? 'line-through' : 'none'}}>{task.icon} {task.title}</div>
-                      {task.time && <div style={{fontSize: '13px', color: '#8b5fbf', marginTop: '4px'}}>⏰ {task.time}</div>}
+                      <div style={{fontSize: '16px', fontWeight: 'bold', textDecoration: task.completed ? 'line-through' : 'none', color: '#2d3748'}}>{task.title}</div>
+                      {task.time && <div style={{fontSize: '12px', color: '#718096', marginTop: '2px'}}>{task.time}</div>}
                     </div>
-                    <button onClick={() => deleteTask(getCurrentDay(), task.id)} style={{padding: '8px 12px', border: 'none', borderRadius: '8px', background: '#dc3545', color: 'white', cursor: 'pointer'}}>🗑️</button>
+                    <button onClick={() => deleteTask(getCurrentDay(), task.id)} style={{padding: '8px 14px', border: 'none', borderRadius: '12px', background: '#fc8181', color: 'white', cursor: 'pointer', fontSize: '13px', fontWeight: '600', boxShadow: '0 2px 8px rgba(252, 129, 129, 0.3)'}}>מחק</button>
                   </div>
                 ))}
               </>
             )}
 
+            {currentPage === 'today' && (
+              <div>
+                <h2 style={{marginBottom: '20px', color: '#ffffff', fontSize: '24px', fontWeight: 'bold', textAlign: 'center'}}>לוז היום - {getCurrentDay()}</h2>
+                
+                <button onClick={() => addTask(getCurrentDay())} style={{width: '100%', padding: '14px', border: 'none', borderRadius: '10px', background: 'linear-gradient(135deg, #6b3fa0, #8b5fbf)', color: 'white', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '20px'}}>+ הוסף למשימות היום</button>
+                
+                <div style={{background: '#1a1a1a', borderRadius: '15px', padding: '20px', boxShadow: '0 2px 10px rgba(107,63,160,0.3)', border: '1px solid #333'}}>
+                  {Array.from({length: 19}, (_, index) => {
+                    const hour = index + 5;
+                    const hourTasks = (schedule[getCurrentDay()] || []).filter(task => {
+                      if (!task.time) return false;
+                      const taskHour = parseInt(task.time.split(':')[0]);
+                      return taskHour === hour;
+                    });
+                    
+                    return (
+                      <div key={hour} style={{
+                        borderBottom: '1px solid #333',
+                        padding: '15px 10px',
+                        minHeight: '60px',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '15px',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#0a0a0a'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      onClick={() => addTask(getCurrentDay())}>
+                        <div style={{
+                          fontSize: '16px',
+                          fontWeight: 'bold',
+                          color: '#6b3fa0',
+                          minWidth: '70px',
+                          paddingTop: '5px'
+                        }}>
+                          {hour.toString().padStart(2, '0')}:00
+                        </div>
+                        <div style={{flex: 1}}>
+                          {hourTasks.length > 0 ? (
+                            hourTasks.map(task => (
+                              <div key={task.id} style={{
+                                background: task.completed ? 'linear-gradient(135deg, #1a4d2e, #1a4d3e)' : 'linear-gradient(135deg, #6b3fa0, #8b5fbf)',
+                                color: 'white',
+                                padding: '12px 15px',
+                                borderRadius: '10px',
+                                marginBottom: '8px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleTask(getCurrentDay(), task.id);
+                              }}>
+                                <div style={{
+                                  width: '24px',
+                                  height: '24px',
+                                  borderRadius: '50%',
+                                  border: '2px solid white',
+                                  background: task.completed ? '#28a745' : 'transparent',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '14px',
+                                  flexShrink: 0
+                                }}>
+                                  {task.completed && '✓'}
+                                </div>
+                                <div style={{flex: 1}}>
+                                  <div style={{fontSize: '16px', fontWeight: 'bold', textDecoration: task.completed ? 'line-through' : 'none'}}>
+                                    {task.title}
+                                  </div>
+                                  {task.time && (
+                                    <div style={{fontSize: '12px', opacity: 0.9, marginTop: '2px'}}>
+                                      {task.time}
+                                    </div>
+                                  )}
+                                </div>
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteTask(getCurrentDay(), task.id);
+                                  }}
+                                  style={{
+                                    background: 'rgba(220, 53, 69, 0.8)',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    padding: '6px 10px',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    fontSize: '12px',
+                                    flexShrink: 0
+                                  }}>
+                                  מחק
+                                </button>
+                              </div>
+                            ))
+                          ) : (
+                            <div style={{
+                              color: '#6c757d',
+                              fontSize: '14px',
+                              fontStyle: 'italic',
+                              paddingTop: '5px'
+                            }}>
+                              לחץ להוספת משימה
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {currentPage === 'schedule' && (
               <div>
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
-                  <h2 style={{margin: 0, color: '#2d3748'}}>לוח זמנים שבועי 📅</h2>
+                  <h2 style={{margin: 0, color: '#ffffff'}}>לוח זמנים שבועי</h2>
                   <button
                     onClick={() => {
                       setSelectedDayForTask(getCurrentDay());
@@ -301,9 +426,9 @@
                   </button>
                 </div>
                 
-                <div style={{background: 'white', borderRadius: '15px', boxShadow: '0 2px 10px rgba(107,63,160,0.1)', overflow: 'auto'}}>
-                  <div style={{display: 'grid', gridTemplateColumns: '70px repeat(7, 1fr)', borderBottom: '2px solid #e9ecef', position: 'sticky', top: 0, background: 'white', zIndex: 10}}>
-                    <div style={{padding: '15px 10px', background: '#f8f9fa', borderLeft: '1px solid #e9ecef', fontSize: '12px', color: '#6c757d'}}></div>
+                <div style={{background: '#1a1a1a', borderRadius: '15px', boxShadow: '0 2px 10px rgba(107,63,160,0.3)', overflow: 'auto', border: '1px solid #333'}}>
+                  <div style={{display: 'grid', gridTemplateColumns: '70px repeat(7, 1fr)', borderBottom: '2px solid #333', position: 'sticky', top: 0, background: '#1a1a1a', zIndex: 10}}>
+                    <div style={{padding: '15px 10px', background: '#0a0a0a', borderLeft: '1px solid #333', fontSize: '12px', color: '#6c757d'}}></div>
                     {daysOfWeek.map(day => {
                       const isToday = day === getCurrentDay();
                       return (
@@ -312,9 +437,9 @@
                           textAlign: 'center',
                           fontWeight: 'bold',
                           fontSize: '14px',
-                          color: isToday ? 'white' : '#2d3748',
-                          background: isToday ? 'linear-gradient(135deg, #6b3fa0, #8b5fbf)' : '#f8f9fa',
-                          borderLeft: '1px solid #e9ecef'
+                          color: isToday ? 'white' : '#ffffff',
+                          background: isToday ? 'linear-gradient(135deg, #6b3fa0, #8b5fbf)' : '#0a0a0a',
+                          borderLeft: '1px solid #333'
                         }}>
                           {day}
                           {isToday && <div style={{fontSize: '10px', marginTop: '2px'}}>היום</div>}
@@ -327,15 +452,15 @@
                     {Array.from({length: 19}, (_, index) => {
                       const hour = index + 5;
                       return (
-                        <div key={hour} style={{display: 'grid', gridTemplateColumns: '70px repeat(7, 1fr)', borderBottom: '1px solid #f0f0f0', minHeight: '60px'}}>
+                        <div key={hour} style={{display: 'grid', gridTemplateColumns: '70px repeat(7, 1fr)', borderBottom: '1px solid #333', minHeight: '60px'}}>
                           <div style={{
                             padding: '10px',
                             textAlign: 'center',
                             fontSize: '13px',
                             fontWeight: 'bold',
-                            color: '#6c757d',
-                            borderLeft: '1px solid #e9ecef',
-                            background: '#fafafa',
+                            color: '#9ca3af',
+                            borderLeft: '1px solid #333',
+                            background: '#0a0a0a',
                             display: 'flex',
                             alignItems: 'flex-start',
                             justifyContent: 'center'
@@ -354,13 +479,14 @@
                               <div 
                                 key={day}
                                 style={{
-                                  borderLeft: '1px solid #e9ecef',
+                                  borderLeft: '1px solid #333',
                                   padding: '4px',
                                   cursor: 'pointer',
                                   transition: 'background 0.2s',
-                                  minHeight: '60px'
+                                  minHeight: '60px',
+                                  background: 'transparent'
                                 }}
-                                onMouseEnter={e => e.currentTarget.style.background = '#f8f9fa'}
+                                onMouseEnter={e => e.currentTarget.style.background = '#1a1a1a'}
                                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                 onClick={(e) => {
                                   e.preventDefault();
@@ -389,20 +515,14 @@
                                       e.stopPropagation();
                                       toggleTask(day, task.id);
                                     }}
-                                    title={`${task.icon} ${task.title}${task.time ? ' - ' + task.time : ''}`}
+                                    title={`${task.title}${task.time ? ' - ' + task.time : ''}`}
                                   >
                                     <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
-                                      <span>{task.icon}</span>
                                       <span style={{flex: 1, overflow: 'hidden', textOverflow: 'ellipsis'}}>
                                         {task.title}
                                       </span>
                                       {task.completed && <span style={{fontSize: '10px'}}>✓</span>}
                                     </div>
-                                    {task.time && (
-                                      <div style={{fontSize: '9px', opacity: 0.9, marginTop: '2px'}}>
-                                        {task.time}
-                                      </div>
-                                    )}
                                   </div>
                                 ))}
                               </div>
@@ -413,70 +533,12 @@
                     })}
                   </div>
                 </div>
-
-                <div style={{marginTop: '20px'}}>
-                  <h3 style={{color: '#2d3748', marginBottom: '15px'}}>כל המטרות השבוע</h3>
-                  {daysOfWeek.map(day => {
-                    const dayTasks = schedule[day] || [];
-                    if (dayTasks.length === 0) return null;
-                    return (
-                      <div key={day} style={{marginBottom: '15px'}}>
-                        <h4 style={{color: '#6b3fa0', marginBottom: '10px'}}>יום {day}</h4>
-                        {dayTasks.map(task => (
-                          <div key={task.id} style={{
-                            background: 'white',
-                            padding: '12px 15px',
-                            borderRadius: '10px',
-                            marginBottom: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            boxShadow: '0 2px 6px rgba(107,63,160,0.1)',
-                            border: task.completed ? '2px solid #28a745' : 'none'
-                          }}>
-                            <button onClick={() => toggleTask(day, task.id)} style={{
-                              width: '24px',
-                              height: '24px',
-                              borderRadius: '50%',
-                              border: '2px solid',
-                              borderColor: task.completed ? '#28a745' : '#6b3fa0',
-                              background: task.completed ? '#28a745' : 'white',
-                              cursor: 'pointer',
-                              color: 'white',
-                              fontSize: '14px'
-                            }}>
-                              {task.completed && '✓'}
-                            </button>
-                            <span style={{fontSize: '20px'}}>{task.icon}</span>
-                            <div style={{flex: 1}}>
-                              <div style={{fontWeight: 'bold', textDecoration: task.completed ? 'line-through' : 'none'}}>
-                                {task.title}
-                              </div>
-                              {task.time && <div style={{fontSize: '12px', color: '#8b5fbf'}}>⏰ {task.time}</div>}
-                            </div>
-                            <button onClick={() => deleteTask(day, task.id)} style={{
-                              padding: '4px 8px',
-                              border: 'none',
-                              borderRadius: '6px',
-                              background: '#dc3545',
-                              color: 'white',
-                              cursor: 'pointer',
-                              fontSize: '12px'
-                            }}>
-                              🗑️
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
             )}
 
             {currentPage === 'achievements' && (
               <div>
-                <h2 style={{marginBottom: '20px', color: '#2d3748'}}>ההישגים שלי 🏆</h2>
+                <h2 style={{marginBottom: '20px', color: '#ffffff'}}>ההישגים שלי</h2>
                 {[
                   {title: '7 ימים רצוף', icon: '🔥', description: '7 ימים ברציפות', unlocked: streak >= 7},
                   {title: 'התחלה חזקה', icon: '⭐', description: 'היום הראשון', unlocked: points > 0},
@@ -484,38 +546,22 @@
                   {title: 'ספורטאי', icon: '💪', description: '30 אימונים', unlocked: false},
                 ].map((achievement, i) => (
                   <div key={i} style={{
-                    background: achievement.unlocked ? 'linear-gradient(135deg, #ffd89b, #19547b)' : 'white',
+                    background: achievement.unlocked ? 'linear-gradient(135deg, #4a3c00, #2d4a19)' : '#1a1a1a',
                     borderRadius: '15px',
                     padding: '25px',
                     marginBottom: '15px',
                     opacity: achievement.unlocked ? 1 : 0.6,
-                    border: achievement.unlocked ? '3px solid gold' : '2px solid #e9ecef',
+                    border: achievement.unlocked ? '3px solid gold' : '2px solid #333',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '15px'
                   }}>
                     <div style={{fontSize: '48px'}}>{achievement.icon}</div>
                     <div style={{flex: 1}}>
-                      <h3 style={{margin: '0 0 8px 0', color: achievement.unlocked ? 'white' : '#2d3748'}}>{achievement.title}</h3>
-                      <p style={{margin: 0, color: achievement.unlocked ? 'rgba(255,255,255,0.9)' : '#6c757d'}}>{achievement.description}</p>
+                      <h3 style={{margin: '0 0 8px 0', color: achievement.unlocked ? '#ffd700' : '#ffffff'}}>{achievement.title}</h3>
+                      <p style={{margin: 0, color: achievement.unlocked ? '#e6e6e6' : '#9ca3af'}}>{achievement.description}</p>
                     </div>
                     {achievement.unlocked ? <div style={{fontSize: '32px'}}>✓</div> : <div style={{fontSize: '32px', opacity: 0.3}}>🔒</div>}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {currentPage === 'stats' && (
-              <div>
-                <h2 style={{marginBottom: '20px', color: '#2d3748'}}>הסטטיסטיקות שלי 📊</h2>
-                {[
-                  {value: streak, label: 'ימים רצוף'},
-                  {value: points, label: 'נקודות'},
-                  {value: level, label: 'רמה'}
-                ].map((stat, i) => (
-                  <div key={i} style={{background: 'white', borderRadius: '15px', padding: '25px', textAlign: 'center', marginBottom: '15px'}}>
-                    <div style={{fontSize: '48px', fontWeight: 'bold', color: '#6b3fa0'}}>{stat.value}</div>
-                    <div style={{fontSize: '16px', color: '#6c757d'}}>{stat.label}</div>
                   </div>
                 ))}
               </div>
@@ -541,17 +587,18 @@
             >
               <div 
                 style={{
-                  background: 'white',
+                  background: '#1a1a1a',
                   borderRadius: '20px',
                   padding: '25px',
                   maxWidth: '450px',
                   width: '100%',
-                  boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
+                  boxShadow: '0 10px 40px rgba(107,63,160,0.5)',
+                  border: '1px solid #6b3fa0'
                 }}
                 onClick={e => e.stopPropagation()}
               >
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px'}}>
-                  <h2 style={{margin: 0, color: '#2d3748', fontSize: '20px'}}>הוסף מטרה - יום {selectedDayForTask}</h2>
+                  <h2 style={{margin: 0, color: '#ffffff', fontSize: '20px'}}>הוסף מטרה - יום {selectedDayForTask}</h2>
                   <button 
                     onClick={() => setShowTaskModal(false)}
                     style={{
@@ -579,7 +626,7 @@
                       id: Date.now(),
                       title: title.trim(),
                       time: time || '',
-                      icon: '🎯',
+                      icon: '',
                       completed: false
                     };
                     
@@ -588,7 +635,6 @@
                       [selectedDayForTask]: [...(prev[selectedDayForTask] || []), newTask]
                     }));
                     
-                    console.log('Task saved:', newTask, 'to day:', selectedDayForTask);
                     setShowTaskModal(false);
                     e.target.reset();
                   }
@@ -608,14 +654,16 @@
                         fontSize: '16px',
                         boxSizing: 'border-box',
                         outline: 'none',
-                        fontWeight: '500'
+                        fontWeight: '500',
+                        background: '#0a0a0a',
+                        color: '#ffffff'
                       }}
                     />
                   </div>
 
                   <div style={{marginBottom: '30px'}}>
                     <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 0'}}>
-                      <span style={{fontSize: '20px'}}>🕐</span>
+                      <span style={{fontSize: '14px', color: '#9ca3af'}}>שעה:</span>
                       <input 
                         key={selectedTimeForTask}
                         type="time"
@@ -624,10 +672,12 @@
                         style={{
                           flex: 1,
                           padding: '12px',
-                          border: '1px solid #e9ecef',
+                          border: '1px solid #333',
                           borderRadius: '8px',
                           fontSize: '14px',
-                          boxSizing: 'border-box'
+                          boxSizing: 'border-box',
+                          background: '#0a0a0a',
+                          color: '#ffffff'
                         }}
                       />
                     </div>
@@ -656,16 +706,15 @@
             </div>
           )}
 
-          <div style={{position: 'fixed', bottom: 0, left: 0, right: 0, background: 'white', display: 'flex', justifyContent: 'space-around', padding: '10px 0', boxShadow: '0 -2px 10px rgba(107,63,160,0.1)'}}>
+          <div style={{position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(45, 45, 63, 0.95)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'space-around', padding: '12px 0 20px 0', boxShadow: '0 -4px 20px rgba(0,0,0,0.2)', borderTop: '1px solid rgba(255,255,255,0.1)'}}>
             {[
-              {id: 'dashboard', icon: '🏠', label: 'בית'},
-              {id: 'schedule', icon: '📅', label: 'לוזים'},
-              {id: 'achievements', icon: '🏆', label: 'הישגים'},
-              {id: 'stats', icon: '📊', label: 'נתונים'}
+              {id: 'dashboard', icon: '', label: 'TODO'},
+              {id: 'today', icon: '', label: 'היום'},
+              {id: 'schedule', icon: '', label: 'לוזים'},
+              {id: 'achievements', icon: '', label: 'הישגים'}
             ].map(item => (
-              <button key={item.id} style={{flex: 1, textAlign: 'center', padding: '10px', border: 'none', background: 'none', cursor: 'pointer', color: currentPage === item.id ? '#6b3fa0' : '#6c757d'}} onClick={() => setCurrentPage(item.id)}>
-                <div style={{fontSize: '22px', marginBottom: '4px'}}>{item.icon}</div>
-                <div style={{fontSize: '10px', fontWeight: '600'}}>{item.label}</div>
+              <button key={item.id} style={{flex: 1, textAlign: 'center', padding: '8px', border: 'none', background: currentPage === item.id ? 'rgba(102, 126, 234, 0.15)' : 'none', cursor: 'pointer', color: currentPage === item.id ? '#667eea' : '#a0aec0', borderRadius: '12px', transition: 'all 0.3s ease'}} onClick={() => setCurrentPage(item.id)}>
+                <div style={{fontSize: '15px', fontWeight: '700'}}>{item.label}</div>
               </button>
             ))}
           </div>
