@@ -312,7 +312,7 @@
                       }}
                       onMouseEnter={e => e.currentTarget.style.background = '#0a0a0a'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                      onClick={() => addTask(getCurrentDay())}>
+                      onClick={() => addTask(getCurrentDay(), hour)}>
                         <div style={{
                           fontSize: '16px',
                           fontWeight: 'bold',
@@ -723,6 +723,10 @@
     }
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
     root.render(<App />);
   </script>
 </body>
