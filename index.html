@@ -19,10 +19,12 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
     body {
       font-family: system-ui, -apple-system, sans-serif;
       background: linear-gradient(180deg, #2d2d3f 0%, #1a1a2e 100%);
+      overscroll-behavior: none;
     }
     #root {
       width: 100%;
@@ -34,7 +36,7 @@
   <div id="root"></div>
   
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useRef } = React;
 
     const Storage = {
       get: (key) => {
@@ -122,6 +124,14 @@
       const [selectedTimeForTask, setSelectedTimeForTask] = useState('');
       const [selectedCategory, setSelectedCategory] = useState('workout');
       const [showHabitModal, setShowHabitModal] = useState(false);
+      
+      // Drag & Drop states - NEW!
+      const [draggedTask, setDraggedTask] = useState(null);
+      const [isDragging, setIsDragging] = useState(false);
+      const [dragPreview, setDragPreview] = useState({ x: 0, y: 0, visible: false });
+      const [currentTime, setCurrentTime] = useState(new Date());
+      
+      const calendarRef = useRef(null);
 
       const calculateCompletion = () => {
         const currentDay = getCurrentDay();
@@ -206,6 +216,105 @@
       };
 
       const canPlayFIFA = completedToday >= 80;
+
+      // Update current time - NEW!
+      useEffect(() => {
+        const timer = setInterval(() => {
+          setCurrentTime(new Date());
+        }, 60000);
+        return () => clearInterval(timer);
+      }, []);
+
+      // DRAG & DROP HANDLERS - NEW!
+      const handleTouchStart = (e, task, day) => {
+        e.stopPropagation();
+        const touch = e.touches[0];
+        
+        setDraggedTask({ ...task, fromDay: day });
+        setDragPreview({ x: touch.clientX, y: touch.clientY, visible: true });
+        
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+      };
+
+      const handleTouchMove = (e) => {
+        if (!draggedTask) return;
+        
+        e.preventDefault();
+        const touch = e.touches[0];
+        setIsDragging(true);
+        setDragPreview({ 
+          x: touch.clientX, 
+          y: touch.clientY, 
+          visible: true 
+        });
+      };
+
+      const handleTouchEnd = (e) => {
+        if (!draggedTask || !isDragging) {
+          setDraggedTask(null);
+          setDragPreview({ x: 0, y: 0, visible: false });
+          setIsDragging(false);
+          return;
+        }
+
+        const touch = e.changedTouches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        if (element && element.dataset.day && element.dataset.hour) {
+          const newDay = element.dataset.day;
+          const newHour = parseInt(element.dataset.hour);
+          
+          moveTask(draggedTask, newDay, newHour);
+          
+          if (navigator.vibrate) {
+            navigator.vibrate(100);
+          }
+        }
+        
+        setDraggedTask(null);
+        setDragPreview({ x: 0, y: 0, visible: false });
+        setIsDragging(false);
+      };
+
+      const moveTask = (task, toDay, toHour) => {
+        const fromDay = task.fromDay;
+        
+        setSchedule(prev => {
+          const newSchedule = { ...prev };
+          
+          newSchedule[fromDay] = newSchedule[fromDay].filter(t => t.id !== task.id);
+          
+          const updatedTask = {
+            ...task,
+            time: `${toHour.toString().padStart(2, '0')}:00`
+          };
+          delete updatedTask.fromDay;
+          
+          newSchedule[toDay] = [...(newSchedule[toDay] || []), updatedTask];
+          
+          return newSchedule;
+        });
+      };
+
+      // Calculate current time indicator - NEW!
+      const getCurrentTimePosition = () => {
+        const now = currentTime;
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        
+        if (hours < 5 || hours >= 23) return null;
+        
+        const hourIndex = hours - 5;
+        const percentage = (minutes / 60) * 100;
+        const basePosition = hourIndex * 60;
+        const position = basePosition + (60 * percentage / 100);
+        
+        return position;
+      };
+
+      const timeLinePosition = getCurrentTimePosition();
 
       return (
         <div style={{fontFamily: 'system-ui, -apple-system, sans-serif', direction: 'rtl', height: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #2d2d3f 0%, #1a1a2e 100%)', color: '#ffffff'}}>
@@ -468,7 +577,61 @@
             )}
 
             {currentPage === 'schedule' && (
-              <div>
+              <div 
+                ref={calendarRef}
+                style={{
+                  position: 'relative',
+                  touchAction: isDragging ? 'none' : 'auto'
+                }}
+              >
+                {/* Time indicator line - NEW! */}
+                {timeLinePosition !== null && (
+                  <div style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    top: `${timeLinePosition + 110}px`,
+                    height: '2px',
+                    background: '#ef4444',
+                    zIndex: 100,
+                    boxShadow: '0 0 4px rgba(239, 68, 68, 0.5)',
+                    pointerEvents: 'none'
+                  }}>
+                    <div style={{
+                      position: 'absolute',
+                      left: '-4px',
+                      top: '-3px',
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      background: '#ef4444',
+                      boxShadow: '0 0 6px rgba(239, 68, 68, 0.8)'
+                    }} />
+                  </div>
+                )}
+
+                {/* Drag preview - NEW! */}
+                {dragPreview.visible && draggedTask && (
+                  <div style={{
+                    position: 'fixed',
+                    left: dragPreview.x - 50,
+                    top: dragPreview.y - 20,
+                    padding: '8px 12px',
+                    background: draggedTask.bgColor || 'linear-gradient(135deg, #6b3fa0, #8b5fbf)',
+                    color: 'white',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontWeight: 'bold',
+                    pointerEvents: 'none',
+                    zIndex: 9999,
+                    opacity: 0.9,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                    transform: 'scale(1.1)'
+                  }}>
+                    {draggedTask.title}
+                  </div>
+                )}
+
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
                   <h2 style={{margin: 0, color: '#ffffff'}}>לוח זמנים שבועי</h2>
                   <button
@@ -498,22 +661,22 @@
                       const isToday = day === getCurrentDay();
                       return (
                         <div key={day} style={{
-                          padding: '15px 10px',
+                          padding: '15px 5px',
                           textAlign: 'center',
                           fontWeight: 'bold',
-                          fontSize: '14px',
+                          fontSize: '12px',
                           color: isToday ? 'white' : '#ffffff',
                           background: isToday ? 'linear-gradient(135deg, #6b3fa0, #8b5fbf)' : '#0a0a0a',
                           borderLeft: '1px solid #333'
                         }}>
                           {day}
-                          {isToday && <div style={{fontSize: '10px', marginTop: '2px'}}>היום</div>}
+                          {isToday && <div style={{fontSize: '9px', marginTop: '2px'}}>היום</div>}
                         </div>
                       );
                     })}
                   </div>
 
-                  <div style={{maxHeight: '500px', overflowY: 'auto'}}>
+                  <div style={{maxHeight: '500px', overflowY: 'auto', WebkitOverflowScrolling: 'touch'}}>
                     {Array.from({length: 19}, (_, index) => {
                       const hour = index + 5;
                       return (
@@ -543,50 +706,73 @@
                             return (
                               <div 
                                 key={day}
+                                data-day={day}
+                                data-hour={hour}
                                 style={{
                                   borderLeft: '1px solid #333',
                                   padding: '4px',
-                                  cursor: 'pointer',
-                                  transition: 'background 0.2s',
                                   minHeight: '60px',
-                                  background: 'transparent'
+                                  background: 'transparent',
+                                  position: 'relative'
                                 }}
-                                onMouseEnter={e => e.currentTarget.style.background = '#1a1a1a'}
-                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  addTask(day, hour);
+                                onTouchStart={(e) => {
+                                  if (dayTasks.length === 0 && e.target === e.currentTarget) {
+                                    addTask(day, hour);
+                                  }
                                 }}
                               >
                                 {dayTasks.map(task => (
                                   <div
                                     key={task.id}
+                                    data-task-id={task.id}
                                     style={{
-                                      background: task.completed ? 'linear-gradient(135deg, #28a745, #20c997)' : (task.bgColor || 'linear-gradient(135deg, #6b3fa0, #8b5fbf)'),
+                                      background: task.completed 
+                                        ? 'linear-gradient(135deg, #28a745, #20c997)' 
+                                        : (task.bgColor || 'linear-gradient(135deg, #6b3fa0, #8b5fbf)'),
                                       color: 'white',
-                                      padding: '6px 8px',
-                                      borderRadius: '6px',
+                                      padding: '8px',
+                                      borderRadius: '8px',
                                       marginBottom: '4px',
                                       fontSize: '11px',
                                       fontWeight: 'bold',
-                                      cursor: 'pointer',
-                                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                      cursor: 'grab',
+                                      boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
                                       overflow: 'hidden',
                                       textOverflow: 'ellipsis',
-                                      whiteSpace: 'nowrap'
+                                      whiteSpace: 'nowrap',
+                                      touchAction: 'none',
+                                      userSelect: 'none',
+                                      WebkitUserSelect: 'none',
+                                      position: 'relative',
+                                      transform: draggedTask?.id === task.id && isDragging ? 'scale(0.95)' : 'scale(1)',
+                                      opacity: draggedTask?.id === task.id && isDragging ? 0.5 : 1,
+                                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
                                     }}
+                                    onTouchStart={(e) => handleTouchStart(e, task, day)}
+                                    onTouchMove={(e) => handleTouchMove(e)}
+                                    onTouchEnd={handleTouchEnd}
                                     onClick={(e) => {
-                                      e.stopPropagation();
-                                      toggleTask(day, task.id);
+                                      if (!isDragging) {
+                                        e.stopPropagation();
+                                        toggleTask(day, task.id);
+                                      }
                                     }}
-                                    title={`${task.title}${task.time ? ' - ' + task.time : ''}`}
                                   >
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
-                                      <span style={{flex: 1, overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                                    <div style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '6px'
+                                    }}>
+                                      <span style={{
+                                        flex: 1,
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis'
+                                      }}>
                                         {task.title}
                                       </span>
-                                      {task.completed && <span style={{fontSize: '10px'}}>✓</span>}
+                                      {task.completed && (
+                                        <span style={{fontSize: '10px'}}>✓</span>
+                                      )}
                                     </div>
                                   </div>
                                 ))}
